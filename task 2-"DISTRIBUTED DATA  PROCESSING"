@@ -1,0 +1,70 @@
+Spark Job Script
+
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import col, avg, count
+
+# Initialize Spark session
+spark = SparkSession.builder \
+    .appName("DataAnalysis") \
+    .getOrCreate()
+
+# Sample data as a list of tuples
+data = [
+    (1, "Anna", 25, "Engineer"),
+    (2, "Brian", 30, "Doctor"),
+    (3, "Catherine", 35, "Lawyer"),
+    (4, "Daniel", 40, "Engineer"),
+    (5, "Ella", 50, "Scientist")
+]
+
+# Define schema
+schema = ["ID", "Name", "Age", "Occupation"]
+
+# Create DataFrame
+df = spark.createDataFrame(data, schema)
+
+# Show initial DataFrame
+print("Initial DataFrame:")
+df.show()
+
+# Filter rows where Age is greater than 25
+df_filtered = df.filter(col("Age") > 25)
+
+# Group by "Occupation" and calculate the average Age
+df_grouped = df_filtered.groupBy("Occupation").agg(
+    avg("Age").alias("Average_Age"),
+    count("*").alias("Count")
+)
+
+# Show grouped DataFrame
+print("Grouped DataFrame with Aggregations:")
+df_grouped.show()
+
+# Save analysis results to a new CSV file
+df_grouped.write.csv('path/to/analysis_results.csv', header=True)
+
+# Stop Spark session
+spark.stop()
+
+Initial DataFrame
+
++---+-------+---+-----------+
+| ID|   Name|Age| Occupation|
++---+-------+---+-----------+
+|  1|   Anna| 25|   Engineer|
+|  2|  Brian| 30|     Doctor|
+|  3|Catherine| 35|     Lawyer|
+|  4| Daniel| 40|   Engineer|
+|  5|   Ella| 50|   Scientist|
++---+-------+---+-----------+
+
+Grouped DataFrame with Aggregations
+
++-----------+-----------+-----+
+| Occupation|Average_Age|Count|
++-----------+-----------+-----+
+|     Doctor|       30.0|    1|
+|   Engineer|       35.0|    2|
+|     Lawyer|       35.0|    1|
+|  Scientist|       50.0|    1|
++-----------+-----------+-----+
